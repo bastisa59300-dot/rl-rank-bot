@@ -1,0 +1,35 @@
+const express = require("express");
+const axios = require("axios");
+
+const app = express();
+
+// 👉 Ton pseudo Rocket League
+const PLAYER = "Sukunnax";
+
+// ⚠️ IMPORTANT : on utilise Rocket League Tracker public page
+const URL = `https://api.tracker.gg/api/v2/rocket-league/standard/profile/epic/${PLAYER}`;
+
+app.get("/", (req, res) => {
+  res.send("RL Rank Bot is running");
+});
+
+app.get("/rank", async (req, res) => {
+  try {
+    const response = await axios.get(URL);
+
+    const segments = response.data.data.segments;
+
+    // 2v2 (playlist ID 13 généralement)
+    const ranked = segments.find(s => s.metadata && s.metadata.name.includes("Ranked Doubles"));
+
+    const rank = ranked ? ranked.stats.tier.metadata.name : "Unknown";
+    const div = ranked ? ranked.stats.division.metadata.name : "";
+
+    res.send(`Rank: ${rank} ${div}`);
+  } catch (err) {
+    res.send("Erreur récupération rank");
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on port " + PORT));
